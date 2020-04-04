@@ -10,16 +10,19 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RemainRange {
-    private DownloadTask task;
     private long start;
     private long end;
 
     public synchronized RemainRange split() {
         long size = end - start;
-        long newStart = start + size;
+        long newStart = start + size / 2;
 
-        RemainRange range = new RemainRange(task, newStart, end);
+        RemainRange range = new RemainRange(newStart, end);
         end = newStart;
         return range;
+    }
+
+    public void moveStart(int len) {
+        start += len;
     }
 }

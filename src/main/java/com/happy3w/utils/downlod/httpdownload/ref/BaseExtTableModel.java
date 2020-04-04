@@ -113,8 +113,7 @@ public abstract class BaseExtTableModel<T> extends AbstractTableModel implements
     /**
      * 清除表中内容
      */
-    public void clear()
-    {
+    public void clear() {
         if (lstRow.size() > 0)
         {
             lstRow.clear();
@@ -160,7 +159,7 @@ public abstract class BaseExtTableModel<T> extends AbstractTableModel implements
      */
     public void showData(Iterator<T> it)
     {
-        lstRow.clear();
+        clear();
         if (it != null)
         {
             while (it.hasNext())

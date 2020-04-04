@@ -15,6 +15,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.text.MessageFormat;
 
 @Service
 public class HttpDownloadFrame extends JFrame {
@@ -98,12 +99,16 @@ public class HttpDownloadFrame extends JFrame {
         tblModelInfo = new BaseReadonlyTableModel<DownloadTask>(new String[]{"Name", "URL", "Total Size", "Download Size", "Percentage"}) {
             @Override
             public Object[] formatItem(DownloadTask task) {
+                long downloadSize = task.getDownloadSize();
+                long totalSize = task.getTotalSize();
+                double percentage = totalSize > 0 ? downloadSize / (double) totalSize : 0;
+                String percentageText = MessageFormat.format("{0,number,#.00%}", percentage);
                 return new Object[]{
                         task.getFileName(),
                         task.getUrl(),
-                        task.getTotalSize(),
-                        task.getDownloadSize(),
-                        task.getDownloadSize() / (double) task.getTotalSize()
+                        totalSize,
+                        downloadSize,
+                        percentageText
                 };
             }
         };

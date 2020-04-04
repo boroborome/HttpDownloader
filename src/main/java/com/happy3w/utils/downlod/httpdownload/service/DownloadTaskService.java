@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.util.ParameterizedTypeImpl;
 import com.happy3w.utils.downlod.httpdownload.mode.DownloadTask;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -24,6 +25,9 @@ public class DownloadTaskService {
     private List<DownloadTask> tasks = Collections.synchronizedList(new ArrayList<>());
 
     public void addTask(DownloadTask task) {
+        File file = new File(task.getDir());
+        task.setFileName(file.getName());
+
         tasks.add(task);
     }
 
@@ -51,6 +55,15 @@ public class DownloadTaskService {
         }
     }
 
+
+    @Scheduled(fixedDelay = 5000l)
+    public void triggerSaveStage() {
+        try {
+            saveTasks();
+        } catch (Exception e) {
+            log.error("Unknown error", e);
+        }
+    }
     public void saveTasks() {
         try {
             OutputStream output = Files.newOutputStream(new File(CONFIG_FILE).toPath());
