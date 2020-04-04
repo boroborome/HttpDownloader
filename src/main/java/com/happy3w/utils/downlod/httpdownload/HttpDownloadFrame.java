@@ -36,19 +36,17 @@ public class HttpDownloadFrame extends JFrame {
 
     @PostConstruct
     public void postAction() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                HttpDownloadFrame frame = HttpDownloadFrame.this;
+        SwingUtilities.invokeLater(() -> {
+            HttpDownloadFrame frame = HttpDownloadFrame.this;
 
-                frame.addWindowListener(new WindowAdapter() {
-                    @Override
-                    public void windowClosed(WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                frame.setVisible(true);
-            }
+            frame.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent e) {
+                    downloadTaskService.saveTasks();
+                    System.exit(0);
+                }
+            });
+            frame.setVisible(true);
         });
     }
 
