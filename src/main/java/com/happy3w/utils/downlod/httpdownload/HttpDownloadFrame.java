@@ -96,7 +96,7 @@ public class HttpDownloadFrame extends JFrame {
     }
 
     private ExtTable createDownloadListPanel() {
-        tblModelInfo = new BaseReadonlyTableModel<DownloadTask>(new String[]{"Name", "URL", "Total Size", "Download Size", "Percentage"}) {
+        tblModelInfo = new BaseReadonlyTableModel<DownloadTask>(new String[]{"Name", "URL", "Total Size", "Download Size", "Percentage", "Message"}) {
             @Override
             public Object[] formatItem(DownloadTask task) {
                 long downloadSize = task.getDownloadSize();
@@ -108,7 +108,8 @@ public class HttpDownloadFrame extends JFrame {
                         task.getUrl(),
                         totalSize,
                         downloadSize,
-                        percentageText
+                        percentageText,
+                        task.getMessage()
                 };
             }
         };

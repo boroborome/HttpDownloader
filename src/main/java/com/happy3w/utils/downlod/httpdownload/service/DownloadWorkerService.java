@@ -46,6 +46,10 @@ public class DownloadWorkerService {
     }
 
     private void ensureRemainRangeDownloading(DownloadTask task) {
+        if (task.getRemainRanges() == null) {
+            return;
+        }
+
         for (RemainRange range : task.getRemainRanges()) {
             if (remainRangeInQueue.contains(range)) {
                 continue;
@@ -74,6 +78,10 @@ public class DownloadWorkerService {
         }
 
         private boolean downloadFilePart() throws Exception {
+            if (range.isFinished()) {
+                return true;
+            }
+
             log.info("Start to download:" + range.getStart() + "====" + range.getEnd());
             URL url = new URL(downloadTask.getUrl());
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -88,16 +96,14 @@ public class DownloadWorkerService {
                 InputStream is = conn.getInputStream();
                 byte[] b = new byte[1024];
                 int len = 0;
-                int total = 0;
                 //拿到临时文件的引用
                 File targetFile = new File(downloadTask.getDir());
                 RandomAccessFile raf = new RandomAccessFile(targetFile, "rwd");
                 //更新文件的写入位置，startIndex
                 raf.seek(range.getStart());
-                while ((len = is.read(b)) != -1) {
+                while (!range.isFinished() && (len = is.read(b)) != -1) {
                     //每次读取流里面的数据，同步吧数据写入临时文件
                     raf.write(b, 0, len);
-                    total += len;
                     range.moveStart(len);
                 }
                 log.info("Finished");
