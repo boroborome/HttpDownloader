@@ -3,6 +3,9 @@ package com.happy3w.utils.downlod.httpdownload;
 import com.happy3w.utils.downlod.httpdownload.mode.DownloadTask;
 import com.happy3w.utils.downlod.httpdownload.ref.BaseReadonlyTableModel;
 import com.happy3w.utils.downlod.httpdownload.ref.ExtTable;
+import com.happy3w.utils.downlod.httpdownload.service.DownloadTaskService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -19,6 +22,9 @@ public class HttpDownloadFrame extends JFrame {
     private JTextField txtDir;
     private ExtTable tblInfo;
     private BaseReadonlyTableModel<DownloadTask> tblModelInfo;
+
+    @Autowired
+    private DownloadTaskService downloadTaskService;
 
     public HttpDownloadFrame() {
         try {
@@ -81,6 +87,13 @@ public class HttpDownloadFrame extends JFrame {
     }
 
     private void doDelete() {
+        int selectRow = tblInfo.getSelectedRow();
+        if (selectRow >= 0 &&
+                JOptionPane.showConfirmDialog(this, "Are you sure to delete this task?")
+        == JOptionPane.YES_OPTION) {
+            DownloadTask task = downloadTaskService.getTasks().get(selectRow);
+            downloadTaskService.deleteTask(task);
+        }
     }
 
     private ExtTable createDownloadListPanel() {
@@ -97,6 +110,7 @@ public class HttpDownloadFrame extends JFrame {
             }
         };
         tblInfo = new ExtTable();
+        tblInfo.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblInfo.setModel(tblModelInfo);
 
         return tblInfo;
@@ -117,25 +131,48 @@ public class HttpDownloadFrame extends JFrame {
                 GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
         pnl.add(getTxtDir(), new GridBagConstraints(1, row, 1, 1, 1, 0, GridBagConstraints.NORTHWEST,
                 GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
-        pnl.add(getBtnCreate(), new GridBagConstraints(2, row, 1, 1, 0, 0, GridBagConstraints.NORTHWEST,
+        pnl.add(createSaveBtn(), new GridBagConstraints(2, row, 1, 1, 0, 0, GridBagConstraints.NORTHWEST,
+                GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0));
+
+        row++;
+        pnl.add(getBtnDownload(), new GridBagConstraints(1, row, 1, 1, 0, 0, GridBagConstraints.NORTHWEST,
                 GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
         return pnl;
     }
 
-    private JButton getBtnCreate() {
-        JButton btnDownload = new JButton("Download");
-        btnDownload.addActionListener(new ActionListener() {
+    private JButton createSaveBtn() {
+        JButton btn = new JButton("...");
+        btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                doDownload();
+                configDownloadFile();
             }
         });
+        return btn;
+    }
+
+    private void configDownloadFile() {
+        JFileChooser chooser = new JFileChooser();
+        int result = chooser.showSaveDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            this.txtDir.setText(chooser.getSelectedFile().getAbsolutePath());
+        }
+    }
+
+    private JButton getBtnDownload() {
+        JButton btnDownload = new JButton("Download");
+        btnDownload.addActionListener(arg0 -> doDownload());
         return btnDownload;
     }
 
     private void doDownload() {
+        DownloadTask task = DownloadTask.builder()
+                .url(txtUrl.getText())
+                .dir(txtDir.getText())
+                .build();
 
+        downloadTaskService.addTask(task);
     }
 
     private JTextField getTxtDir() {
@@ -146,5 +183,23 @@ public class HttpDownloadFrame extends JFrame {
     private JTextField getTxtUrl() {
         txtUrl = new JTextField();
         return txtUrl;
+    }
+
+    @Scheduled(fixedDelay = 1000l)
+    public void refreshUI() {
+        try {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    int selectRow = tblInfo.getSelectedRow();
+                    tblModelInfo.showData(downloadTaskService.getTasks());
+                    if (selectRow >= 0) {
+                        tblInfo.getSelectionModel().setSelectionInterval(selectRow, selectRow);
+                    }
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
